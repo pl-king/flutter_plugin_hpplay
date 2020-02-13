@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.recyclerview.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:ignore="HardcodedText">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin">
+
+        <TextView
+            android:id="@+id/tv_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size_normal" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tv_wifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/btn_text_size_normal" />
+
+            <TextView
+                android:id="@+id/tv_ip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/btn_text_size_normal" />
+        </LinearLayout>
+
+        <include layout="@layout/include_divider_line" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="搜索"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="开关："
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/btn_text_size" />
+
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/switch_lelink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Lelink" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_dlna"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="DLNA" />
+
+            <Button
+                android:id="@+id/btn_qrcode"
+                style="@style/ButtonStyle"
+                android:text="二维码"
+                android:textSize="@dimen/btn_text_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_browse"
+                style="@style/ButtonStyle"
+                android:text="搜索"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_stop_browse"
+                style="@style/ButtonStyle"
+                android:text="停止搜索"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_disconnect"
+                style="@style/ButtonStyle"
+                android:text="断开连接"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_delete"
+                style="@style/ButtonStyle"
+                android:text="删除云设备"
+                android:textSize="@dimen/btn_text_size" />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_browse"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="@drawable/shape_browse_divider"
+            android:padding="1dp"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/et_pincode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="number"
+                android:maxLength="9" />
+
+            <Button
+                android:id="@+id/btn_pincode_connect"
+                style="@style/ButtonStyle"
+                android:hint="请输入pin码"
+                android:text="Pin码连接" />
+        </LinearLayout>
+
+
+        <include layout="@layout/include_divider_line" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="推送"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="240dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:weightSum="6">
+
+                <EditText
+                    android:id="@+id/et_net_video"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:hint="请输入网络视频url"
+                    android:inputType="text"
+                    android:textSize="14sp"
+                    tools:ignore="NestedWeights" />
+
+                <EditText
+                    android:id="@+id/et_net_music"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:hint="请输入网络音乐url"
+                    android:inputType="text"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/et_net_picture"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:hint="请输入网络图片url"
+                    android:inputType="text"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/et_local_video"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:hint="请输入本地视频url"
+                    android:inputType="text"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/et_local_music"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:hint="请输入本地音乐url"
+                    android:inputType="text"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/et_local_picture"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:hint="请输入本地图片url"
+                    android:inputType="text"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <RadioGroup
+                android:id="@+id/radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:weightSum="6">
+
+                <RadioButton
+                    android:id="@+id/rb_net_video"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="网络视频" />
+
+                <RadioButton
+                    android:id="@+id/rb_net_music"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="网络音乐" />
+
+                <RadioButton
+                    android:id="@+id/rb_net_picture"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="网络图片" />
+
+                <RadioButton
+                    android:id="@+id/rb_local_video"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="本地视频" />
+
+                <RadioButton
+                    android:id="@+id/rb_local_music"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="本地音乐" />
+
+                <RadioButton
+                    android:id="@+id/rb_local_picture"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="本地图片" />
+            </RadioGroup>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_play"
+                style="@style/ButtonStyle"
+                android:text="播放"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_pause"
+                style="@style/ButtonStyle"
+                android:text="暂停"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_stop"
+                style="@style/ButtonStyle"
+                android:text="结束"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_volume_up"
+                style="@style/ButtonStyle"
+                android:text="音量+"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_volume_down"
+                style="@style/ButtonStyle"
+                android:text="音量-"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/btn_screenshot"
+                style="@style/ButtonStyle"
+                android:text="截屏"
+                android:textSize="@dimen/btn_text_size" />
+
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/seekbar_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="百分比音量" />
+
+        <SeekBar
+            android:id="@+id/seekbar_volume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <include layout="@layout/include_divider_line" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="镜像"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_connect_device"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="@drawable/shape_browse_divider"
+            android:padding="1dp"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="3.2">
+
+            <RadioGroup
+                android:id="@+id/rg_resolution"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.2"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_resolution_height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="屏幕分辨率：高"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_resolution_middle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="屏幕分辨率：中"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_resolution_low"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="屏幕分辨率：自动"
+                    android:textSize="12sp" />
+
+            </RadioGroup>
+
+            <RadioGroup
+                android:id="@+id/rg_bitrate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_bitrate_height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="比特率：高"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_bitrate_middle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="比特率：中"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_bitrate_low"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="比特率：低"
+                    android:textSize="12sp" />
+            </RadioGroup>
+
+            <RadioGroup
+                android:id="@+id/rg_mirror_audio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <RadioButton
+                    android:id="@+id/rb_mirror_audio_on"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="音频：开"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_mirror_audio_off"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="音频：关"
+                    android:textSize="12sp" />
+
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_start_mirror"
+                style="@style/ButtonStyle"
+                android:text="开始镜像" />
+
+            <Button
+                android:id="@+id/btn_stop_mirror"
+                style="@style/ButtonStyle"
+                android:text="结束镜像" />
+
+        </LinearLayout>
+
+        <include layout="@layout/include_divider_line" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="广告"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_set_ad_listener"
+                style="@style/ButtonStyle"
+                android:text="设置监听器" />
+
+            <Button
+                android:id="@+id/btn_report_ad_show"
+                style="@style/ButtonStyle"
+                android:text="广告播放上报" />
+
+            <Button
+                android:id="@+id/btn_report_ad_end"
+                style="@style/ButtonStyle"
+                android:text="广告播放完成上报" />
+        </LinearLayout>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="透传"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_send_error_info"
+                style="@style/ButtonStyle"
+                android:text="错误透传" />
+
+            <Button
+                android:id="@+id/btn_send_lebo_passth_info"
+                style="@style/ButtonStyle"
+                android:text="乐播数据透传" />
+
+            <Button
+                android:id="@+id/btn_send_passth_info"
+                style="@style/ButtonStyle"
+                android:text="第三方数据透传" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <Button
+                android:id="@+id/btn_send_mediaasset_info"
+                style="@style/ButtonStyle"
+                android:text="带媒资播放" />
+
+            <Button
+                android:id="@+id/btn_send_header_info"
+                style="@style/ButtonStyle"
+                android:text="带header播放" />
+
+            <Button
+                android:id="@+id/btn_loop_mode"
+                style="@style/ButtonStyle"
+                android:text="循环模式" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_3rd_monitor"
+                style="@style/ButtonStyle"
+                android:text="第三方检测上报" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <CheckBox
+                android:id="@+id/checkbox"
+                style="@style/ButtonStyle"
+                android:text="sdk" />
+
+            <EditText
+                android:id="@+id/edit_appid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="14" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:background="@android:color/black" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="主动上报统计"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <Button
+                android:id="@+id/btn_pushbtn_click"
+                style="@style/ButtonStyle"
+                android:text="投屏按钮点击" />
+
+            <Button
+                android:id="@+id/btn_list_gone"
+                style="@style/ButtonStyle"
+                android:text="列表消失" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="弹幕"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/btn_text_size" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/send_danmaku"
+                style="@style/ButtonStyle"
+                android:text="发送测试弹幕"
+                android:textSize="@dimen/btn_text_size" />
+
+            <Button
+                android:id="@+id/danmaku_settings"
+                style="@style/ButtonStyle"
+                android:text="弹幕设置"
+                android:textSize="@dimen/btn_text_size" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+</androidx.recyclerview.widget.NestedScrollView>

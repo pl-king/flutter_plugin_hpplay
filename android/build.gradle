@@ -31,4 +31,16 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+    repositories {
+        flatDir {
+            dirs 'libs'   // aar目录
+        }
+    }
+}
+dependencies {
+    implementation(name: 'lelink', ext: 'aar')
+    implementation(name: 'zxing-1.0.2', ext: 'aar')
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'com.google.code.gson:gson:2.8.0'
 }

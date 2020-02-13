@@ -18,6 +18,6 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    expect(await FlutterPluginHpplay.platformVersion, '42');
+    expect(await FlutterPluginHpplay.initHpplay, '42');
   });
 }
