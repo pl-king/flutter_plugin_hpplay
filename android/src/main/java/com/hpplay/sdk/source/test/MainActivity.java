@@ -52,7 +52,7 @@ import com.hpplay.sdk.source.test.utils.AssetsUtil;
 import com.hpplay.sdk.source.test.utils.CameraPermissionCompat;
 import com.hpplay.sdk.source.test.utils.Logger;
 import com.hpplay.sdk.source.test.utils.ToastUtil;
-import com.mxiaotu.flutter_plugin_newhpplay.R;
+import com.pl.flutter_plugin_hpplay.R;
 
 
 import java.lang.ref.WeakReference;

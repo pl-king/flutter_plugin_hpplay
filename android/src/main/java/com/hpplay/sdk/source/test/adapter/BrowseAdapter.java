@@ -11,7 +11,7 @@ import android.widget.TextView;
 import com.hpplay.sdk.source.browse.api.LelinkServiceInfo;
 import com.hpplay.sdk.source.test.OnItemClickListener;
 import com.hpplay.sdk.source.test.utils.AssetsUtil;
-import com.mxiaotu.flutter_plugin_newhpplay.R;
+import com.pl.flutter_plugin_hpplay.R;
 
 import java.util.ArrayList;
 import java.util.List;

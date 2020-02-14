@@ -1,6 +1,5 @@
 group 'com.pl.flutter_plugin_hpplay'
 version '1.0'
-
 buildscript {
     repositories {
         google()
@@ -16,6 +15,9 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
+        maven {
+            url 'http://localhost:8081/nexus/service/local/repositories/thirdparty/content'
+        }
     }
 }
 
@@ -31,15 +33,11 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
-    repositories {
-        flatDir {
-            dirs 'libs'   // aar目录
-        }
-    }
 }
 dependencies {
-    implementation(name: 'lelink', ext: 'aar')
-    implementation(name: 'zxing-1.0.2', ext: 'aar')
+//    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
+    implementation 'zxing:zxing:1.0.0@aar'
+    implementation 'lelink:lelink:1.0.0@aar'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'com.google.code.gson:gson:2.8.0'
