@@ -1,6 +1,7 @@
 name: flutter_plugin_hpplay
 description: A new Flutter plugin.
-version: 0.0.2
+version: 0.0.8
+
 homepage: https://github.com/pl-king/flutter_plugin_hpplay.git
 
 environment:

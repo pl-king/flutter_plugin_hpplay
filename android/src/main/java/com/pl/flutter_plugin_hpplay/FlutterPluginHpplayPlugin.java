@@ -3,6 +3,7 @@ package com.pl.flutter_plugin_hpplay;
 import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -33,33 +34,37 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
+
 
 /**
  * FlutterPluginHpplayPlugin
  */
-public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandler {
+public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
 
-    public FlutterPluginHpplayPlugin(Registrar registrar) {
-        this.mActivity = registrar.activity();
-        new EventChannel(registrar.messenger(), "sample.flutter.io/test_event_channel").setStreamHandler(streamHandler);
-    }
+//    public FlutterPluginHpplayPlugin(Registrar registrar) {
+//        this.context = registrar.activity();
+//        new EventChannel(registrar.messenger(), "sample.flutter.io/test_event_channel").setStreamHandler(streamHandler);
+//    }
 
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private MethodChannel channel;
+    private Activity context;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
         channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "flutter_plugin_hpplay");
         channel.setMethodCallHandler(this);
+        new EventChannel(flutterPluginBinding.getBinaryMessenger(), "sample.flutter.io/test_event_channel").setStreamHandler(streamHandler);
     }
 
     // This static function is optional and equivalent to onAttachedToEngine. It supports the old
@@ -71,10 +76,10 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
     // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
     // depending on the user's project. onAttachedToEngine or registerWith must both be defined
     // in the same class.
-    public static void registerWith(Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_plugin_hpplay");
-        channel.setMethodCallHandler(new FlutterPluginHpplayPlugin(registrar));
-    }
+//    public static void registerWith(Registrar registrar) {
+//        final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_plugin_hpplay");
+//        channel.setMethodCallHandler(new FlutterPluginHpplayPlugin(registrar));
+//    }
 
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
@@ -84,7 +89,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
         } else if (call.method.equals("initHpplay")) {
             initDates();
         } else if (call.method.equals("getNetWorkName")) {
-            result.success("WiFi:" + NetworkUtil.getNetWorkName(mActivity));
+            result.success("WiFi:" + NetworkUtil.getNetWorkName(context));
 //      result.success("Android " + android.os.Build.VERSION.RELEASE);
         } else if (call.method.equals("HpplayBrowse")) {
             if (showConnetDevice()) return;
@@ -133,7 +138,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
             }
 
         } else {
-//                ToastUtil.show(mActivity, "请先连接设备");
+//                ToastUtil.show(context, "请先连接设备");
         }
         return false;
     }
@@ -151,36 +156,58 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
             }
 
         } else {
-            ToastUtil.show(mActivity, "请先连接设备");
+            ToastUtil.show(context, "请先连接设备");
         }
     }
 
     private void initDates() {
-        mDelayHandler = new FlutterPluginHpplayPlugin.UIHandler(mActivity);
-        mSDKManager = new SDKManager(mActivity);
+        mDelayHandler = new FlutterPluginHpplayPlugin.UIHandler(context);
+        mSDKManager = new SDKManager(context);
         mSDKManager.startMonitor();
-        mNetworkReceiver = new FlutterPluginHpplayPlugin.NetworkReceiver(mActivity);
+        mNetworkReceiver = new FlutterPluginHpplayPlugin.NetworkReceiver(context);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WIFI_AP_STATE_CHANGED_ACTION);
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        mActivity.registerReceiver(mNetworkReceiver, intentFilter);
+        context.registerReceiver(mNetworkReceiver, intentFilter);
 
-        if (ContextCompat.checkSelfPermission(mActivity.getApplication(),
+        if (ContextCompat.checkSelfPermission(context.getApplication(),
                 Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_DENIED
-                && ContextCompat.checkSelfPermission(mActivity,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(mActivity,
+                && ContextCompat.checkSelfPermission(context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED) {
             Log.e(TAG, "有权限");
             initLelinkHelper();
         } else {
             // 若没有授权，会弹出一个对话框（这个对话框是系统的，开发者不能自己定制），用户选择是否授权应用使用系统权限
-            ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.READ_PHONE_STATE,
+            ActivityCompat.requestPermissions(context, new String[]{Manifest.permission.READ_PHONE_STATE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_MUST_PERMISSION);
             Log.e(TAG, "没有权限");
             initLelinkHelper();
         }
 
     }
+
+    @Override
+    public void onAttachedToActivity(ActivityPluginBinding binding) {
+        context = binding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+
+    }
+
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+
+    }
+
 
     private static class NetworkReceiver extends BroadcastReceiver {
 
@@ -206,7 +233,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
 
     private void initLelinkHelper() {
         Log.e(TAG, "initLelinkHelper1");
-        mLelinkHelper = LelinkHelper.getInstance(mActivity.getApplicationContext());
+        mLelinkHelper = LelinkHelper.getInstance(context.getApplicationContext());
         Log.e(TAG, "mLelinkHelper:" + mLelinkHelper);
         mLelinkHelper.setUIUpdateListener(mUIUpdateListener);
     }
@@ -221,7 +248,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
                 case IUIUpdateListener.STATE_SEARCH_SUCCESS:
                     if (isFirstBrowse) {
                         isFirstBrowse = false;
-                        ToastUtil.show(mActivity, "搜索成功");
+                        ToastUtil.show(context, "搜索成功");
                         Log.e(TAG, "搜索成功");
                     }
                     if (null != mDelayHandler) {
@@ -231,7 +258,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
                     }
                     break;
                 case IUIUpdateListener.STATE_SEARCH_ERROR:
-                    ToastUtil.show(mActivity, "Auth错误");
+                    ToastUtil.show(context, "Auth错误");
                     break;
                 case IUIUpdateListener.STATE_SEARCH_NO_RESULT:
                     if (null != mDelayHandler) {
@@ -248,12 +275,12 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
                     // 更新列表
 //                    updateConnectAdapter();
                     Log.e(TAG, "ToastUtil " + deatail.text);
-                    ToastUtil.show(mActivity, deatail.text);
+                    ToastUtil.show(context, deatail.text);
                     break;
                 case IUIUpdateListener.STATE_DISCONNECT:
                     Log.e(TAG, "disConnect success:" + deatail.text);
                     Log.e(TAG, "ToastUtil " + deatail.text);
-                    ToastUtil.show(mActivity, deatail.text);
+                    ToastUtil.show(context, deatail.text);
 //                    mBrowseAdapter.setSelectInfo(null);
 //                    mBrowseAdapter.notifyDataSetChanged();
                     // 更新列表
@@ -262,7 +289,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
                 case IUIUpdateListener.STATE_CONNECT_FAILURE:
                     Logger.test(TAG, "connect failure:" + deatail.text);
                     Log.e(TAG, "ToastUtil " + deatail.text);
-                    ToastUtil.show(mActivity, deatail.text);
+                    ToastUtil.show(context, deatail.text);
 //                    mBrowseAdapter.setSelectInfo(null);
 //                    mBrowseAdapter.notifyDataSetChanged();
 //                    // 更新列表
@@ -272,34 +299,34 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
                     Logger.test(TAG, "callback play");
 //                    isPause = false;
                     Log.e(TAG, "ToastUtil 开始播放");
-                    ToastUtil.show(mActivity, "开始播放");
+                    ToastUtil.show(context, "开始播放");
                     break;
                 case IUIUpdateListener.STATE_LOADING:
                     Logger.test(TAG, "callback loading");
 //                    isPause = false;
                     Log.e(TAG, "ToastUtil 开始加载");
-                    ToastUtil.show(mActivity, "开始加载");
+                    ToastUtil.show(context, "开始加载");
                     break;
                 case IUIUpdateListener.STATE_PAUSE:
                     Logger.test(TAG, "callback pause");
                     Log.e(TAG, "ToastUtil 暂停播放");
-                    ToastUtil.show(mActivity, "暂停播放");
+                    ToastUtil.show(context, "暂停播放");
 //                    isPause = true;
                     break;
                 case IUIUpdateListener.STATE_STOP:
                     Logger.test(TAG, "callback stop");
 //                    isPause = false;
                     Log.e(TAG, "ToastUtil 播放结束");
-                    ToastUtil.show(mActivity, "播放结束");
+                    ToastUtil.show(context, "播放结束");
                     break;
                 case IUIUpdateListener.STATE_SEEK:
                     Logger.test(TAG, "callback seek:" + deatail.text);
                     Logger.d(TAG, "ToastUtil seek完成:" + deatail.text);
-                    ToastUtil.show(mActivity, "seek完成" + deatail.text);
+                    ToastUtil.show(context, "seek完成" + deatail.text);
                     break;
                 case IUIUpdateListener.STATE_PLAY_ERROR:
                     Logger.test(TAG, "callback error:" + deatail.text);
-                    ToastUtil.show(mActivity, "播放错误：" + deatail.text);
+                    ToastUtil.show(context, "播放错误：" + deatail.text);
                     break;
                 case IUIUpdateListener.STATE_POSITION_UPDATE:
                     Logger.test(TAG, "callback position update:" + deatail.text);
@@ -313,20 +340,20 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
                 case IUIUpdateListener.STATE_COMPLETION:
                     Logger.test(TAG, "callback completion");
                     Logger.d(TAG, "ToastUtil 播放完成");
-                    ToastUtil.show(mActivity, "播放完成");
+                    ToastUtil.show(context, "播放完成");
                     break;
                 case IUIUpdateListener.STATE_INPUT_SCREENCODE:
                     Logger.test(TAG, "input screencode");
-                    ToastUtil.show(mActivity, deatail.text);
+                    ToastUtil.show(context, deatail.text);
 //                    showScreenCodeDialog();
                     break;
                 case IUIUpdateListener.RELEVANCE_DATA_UNSUPPORT:
                     Logger.test(TAG, "unsupport relevance data");
-                    ToastUtil.show(mActivity, deatail.text);
+                    ToastUtil.show(context, deatail.text);
                     break;
                 case IUIUpdateListener.STATE_SCREENSHOT:
                     Logger.test(TAG, "unsupport relevance data");
-                    ToastUtil.show(mActivity, deatail.text);
+                    ToastUtil.show(context, deatail.text);
                     break;
             }
         }
@@ -362,7 +389,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
             }
             mLelinkHelper.browse(type);
         } else {
-            ToastUtil.show(mActivity, "权限不够");
+            ToastUtil.show(context, "权限不够");
         }
     }
 
@@ -374,13 +401,13 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
             isFirstBrowse = false;
             mLelinkHelper.stopBrowse();
         } else {
-            ToastUtil.show(mActivity, "未初始化");
+            ToastUtil.show(context, "未初始化");
         }
     }
 
     private void connect(LelinkServiceInfo info) {
         if (null == mLelinkHelper) {
-            ToastUtil.show(mActivity, "未初始化");
+            ToastUtil.show(context, "未初始化");
             return;
         }
         List<LelinkServiceInfo> connectInfos = mLelinkHelper.getConnectInfos();
@@ -393,13 +420,13 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
 //                }
 //
 //            }
-//            ToastUtil.show(mActivity, "选中了:" + info.getName()
+//            ToastUtil.show(context, "选中了:" + info.getName()
 //                    + " type:" + info.getTypes());
             Logger.test(TAG, "还有没有断开的连接 connect:" + connectInfos.toString());
 //            mLelinkHelper.connect(info);
         } else {
             mLelinkHelper.connect(info);
-            ToastUtil.show(mActivity, "connect");
+            ToastUtil.show(context, "connect");
         }
         Logger.test(TAG, "connect click:" + info.getName());
     }
@@ -407,13 +434,13 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
     private void play(int mediaType, String url) {
         isPlayMirror = false;
         if (null == mLelinkHelper) {
-            ToastUtil.show(mActivity, "未初始化或未选择设备");
+            ToastUtil.show(context, "未初始化或未选择设备");
             return;
         }
         List<LelinkServiceInfo> connectInfos = mLelinkHelper.getConnectInfos();
         Logger.e(TAG, "connect click:" + connectInfos.toString());
         if (null == connectInfos || connectInfos.isEmpty()) {
-            ToastUtil.show(mActivity, "请先连接设备");
+            ToastUtil.show(context, "请先连接设备");
             return;
         }
 //        if (isPause) {
@@ -547,9 +574,7 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
             eventSink = null;
         }
     };
-    //上下文
-    public Activity mActivity;
-    //
+
     private SDKManager mSDKManager;
     private boolean isFirstBrowse = true;
     //    private boolean isPause = false;
