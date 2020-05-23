@@ -102,8 +102,8 @@ public class LelinkHelper {
         mAllCast.connect(info);
     }
 
-    public void disConnect(LelinkServiceInfo info) {
-        mAllCast.disConnect(info);
+    public boolean disConnect(LelinkServiceInfo info) {
+        return  mAllCast.disConnect(info);
     }
 
     public void deleteRemoteServiceInfo(LelinkServiceInfo selectInfo) {

@@ -152,7 +152,8 @@ public class FlutterPluginHpplayPlugin implements FlutterPlugin, MethodCallHandl
         if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
             Logger.test(TAG, "stop click");
             for (int i = 0; i < connectInfos.size(); i++) {
-                mLelinkHelper.disConnect(connectInfos.get(i));
+               boolean isDis= mLelinkHelper.disConnect(connectInfos.get(i));
+                Logger.test(TAG, "isDis:"+isDis);
             }
 
         } else {

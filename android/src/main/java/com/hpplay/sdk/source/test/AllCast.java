@@ -77,12 +77,12 @@ public class AllCast {
     }
 
     private void initLelinkService(Context context, String appid, String appSecret) {
-        Log.e(TAG, "initLelinkService"+appid+appSecret);
+        Log.e(TAG, "initLelinkService" + appid + appSecret);
         LelinkSetting lelinkSetting = new LelinkSetting.LelinkSettingBuilder(appid, appSecret)
                 .build();
         Log.e(TAG, "lelinkSetting");
         mLelinkServiceManager = LelinkServiceManager.getInstance(context);
-        Log.e(TAG, "getInstance1"+mLelinkServiceManager);
+        Log.e(TAG, "getInstance1" + mLelinkServiceManager);
         mLelinkServiceManager.setDebug(true);
         Log.e(TAG, "getInstance2");
         mLelinkServiceManager.setLelinkSetting(lelinkSetting);
@@ -140,10 +140,11 @@ public class AllCast {
         mLelinkPlayer.connect(info);
     }
 
-    public void disConnect(LelinkServiceInfo info) {
-        if(info != null){
-            mLelinkPlayer.disConnect(info);
+    public boolean disConnect(LelinkServiceInfo info) {
+        if (info != null) {
+            return mLelinkPlayer.disConnect(info);
         }
+        return false;
     }
 
     public void deleteRemoteServiceInfo(LelinkServiceInfo serviceInfo) {
