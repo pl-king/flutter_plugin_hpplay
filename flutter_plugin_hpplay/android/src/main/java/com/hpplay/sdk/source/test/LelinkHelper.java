@@ -293,14 +293,18 @@ public class LelinkHelper {
         @Override
         public void onConnect(final LelinkServiceInfo serviceInfo, final int extra) {
             Logger.d(TAG, "onConnect:" + serviceInfo.getName());
+            Log.e("pl123","onConnect1");
             if (null != mUIHandler) {
                 String type = extra == TYPE_LELINK ? "Lelink" : extra == TYPE_DLNA ? "DLNA" : extra == TYPE_NEW_LELINK ? "NEW_LELINK" : "IM";
                 String text;
                 if (TextUtils.isEmpty(serviceInfo.getName())) {
                     text = "pin码连接" + type + "成功";
+                    text = "pin码连接" + type + "成功";
                 } else {
-                    text = serviceInfo.getName() + "连接" + type + "成功";
+//                    text = serviceInfo.getName() + "连接" + type + "成功";
+                    text = serviceInfo.getName();
                 }
+                Log.e("pl123","onConnect2");
                 mUIHandler.sendMessage(buildMessageDetail(IUIUpdateListener.STATE_CONNECT_SUCCESS, text, serviceInfo));
             }
         }

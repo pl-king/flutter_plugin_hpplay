@@ -9,11 +9,15 @@ import com.hpplay.sdk.source.test.bean.MessageDeatail;
  */
 public interface IUIUpdateListener {
 
-    int STATE_SEARCH_SUCCESS = 1;
+    int STATE_SEARCH_SUCCESS = 1;//搜索完成
     int STATE_SEARCH_ERROR = 2;
     int STATE_SEARCH_NO_RESULT = 3;
-    int STATE_SEARCH_ING = 5;
+    int STATE_SEARCH_RESULT = 4;//搜索结果
+    int STATE_SEARCH_ING = 5;//搜索中
 
+
+    int STATE_CONNECT_VIDEO = 8;//视频播放中
+    int STATE_CONNECT_PIC = 9;//图片播放中
     int STATE_CONNECT_SUCCESS = 10;
     int STATE_DISCONNECT = 11;// 连接断开
     int STATE_CONNECT_FAILURE = 12;// 连接失败

@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.Manifest;
 import android.app.Activity;
@@ -76,6 +75,8 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
+import static com.hpplay.sdk.source.test.IUIUpdateListener.STATE_SEARCH_RESULT;
+
 /**
  * FlutterpluginhpplayPlugin
  */
@@ -93,7 +94,10 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
     public static final int CODE_SEARCHING = 1;
     public static final int CODE_SEARCHED = 0;
 
-    public int mConnectType = CONNECT_INIT;
+    //连接状态
+    public int mConnectType = 0;
+
+    //搜索状态 搜索中 搜索完成
     public int mSearchedType = CODE_SEARCHED;
 
 
@@ -112,6 +116,17 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
 //        handler.what = CODE_SEARCHED;
 //        mSearchHandler.handleMessage(handler);
 //    }
+
+    public boolean changeConnectType(int type) {
+        if (mConnectType == type) {
+            return false;
+        }
+        mSearchedType = type;//更新全局变量表示状态改变
+        Map<String, Integer> map = new HashMap();
+        map.put("search", type);
+        sendAck(mSearchedType, map);
+        return true;
+    }
 
     public boolean changeSearchType(int type) {
         if (mSearchedType == type) {
@@ -147,17 +162,12 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
 
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-        if (call.method.equals("getPlatformVersion")) {
-            result.success("Android " + android.os.Build.VERSION.RELEASE);
-        } else if (call.method.equals("initHpplay")) {
+        if (call.method.equals("initHpplay")) {
             initDates();
         } else if (call.method.equals("getNetWorkName")) {
             result.success("WiFi:" + NetworkUtil.getNetWorkName(context));
         } else if (call.method.equals("HpplayBrowse")) {
             startSearch();
-//            result.success(true);//调用成功及时返回状态为搜索中
-//            if (showConnetDevice()) return;
-//            browse();
         } else if (call.method.equals("HpplayConnect")) {
             String deviceIp = call.argument("LelinkServiceInfoJson");
             Log.e(TAG, deviceIp);
@@ -301,9 +311,7 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
     }
 
     private void initLelinkHelper() {
-        Log.e(TAG, "initLelinkHelper1");
         mLelinkHelper = LelinkHelper.getInstance(context.getApplicationContext());
-        Log.e(TAG, "mLelinkHelper:" + mLelinkHelper);
         mLelinkHelper.setUIUpdateListener(mUIUpdateListener);
     }
 
@@ -319,44 +327,48 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
                         Log.e(TAG, "搜索成功");
                     }
                     if (null != mDelayHandler) {
-                        mDelayHandler.removeCallbacksAndMessages(null);
+                        mDelayHandler.removeMessages(what);
                         mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
                                 TimeUnit.SECONDS.toMillis(1));
                     }
                     break;
                 case IUIUpdateListener.STATE_SEARCH_ERROR:
                     if (null != mDelayHandler) {
-                        mDelayHandler.removeCallbacksAndMessages(null);
+                        mDelayHandler.removeMessages(what);
                         mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
                                 TimeUnit.SECONDS.toMillis(1));
                     }
-                    ToastUtil.show(context, "Auth错误");
                     break;
                 case IUIUpdateListener.STATE_SEARCH_NO_RESULT:
                     if (null != mDelayHandler) {
-                        mDelayHandler.removeCallbacksAndMessages(null);
-                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
+                        mDelayHandler.removeMessages(what);
+                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_NO_RESULT,
                                 TimeUnit.SECONDS.toMillis(1));
                     }
                     break;
+                //------------------------------------------------------------------------------------
                 case IUIUpdateListener.STATE_CONNECT_SUCCESS:
-                    Log.e(TAG, "connect success:" + deatail.text);
-                    eventSink.success(deatail.text);
-                    // 刷新button
-//                    refreshMediaButton((LelinkServiceInfo) deatail.obj);
-                    // 更新列表
-//                    updateConnectAdapter();
-                    Log.e(TAG, "ToastUtil " + deatail.text);
-                    ToastUtil.show(context, deatail.text);
+                    Log.e("pl123", "onConnect3");
+                    if (null != mDelayHandler) {
+                        Log.e("pl123", "onConnect3。1");
+                        mDelayHandler.removeMessages(what);
+                        Message message = new Message();
+                        message.obj = deatail.text;
+                        message.what = IUIUpdateListener.STATE_CONNECT_SUCCESS;
+                        mDelayHandler.sendMessageDelayed(message,
+                                TimeUnit.SECONDS.toMillis(1));
+                        Log.e("pl123", "onConnect3。2");
+                    }
                     break;
                 case IUIUpdateListener.STATE_DISCONNECT:
-                    Log.e(TAG, "disConnect success:" + deatail.text);
-                    Log.e(TAG, "ToastUtil " + deatail.text);
-                    ToastUtil.show(context, deatail.text);
-//                    mBrowseAdapter.setSelectInfo(null);
-//                    mBrowseAdapter.notifyDataSetChanged();
-                    // 更新列表
-//                    updateConnectAdapter();
+                    if (null != mDelayHandler) {
+                        mDelayHandler.removeMessages(what);
+                        Message message = new Message();
+                        message.obj = deatail.text;
+                        message.what = IUIUpdateListener.STATE_DISCONNECT;
+                        mDelayHandler.sendMessageDelayed(message,
+                                TimeUnit.SECONDS.toMillis(1));
+                    }
                     break;
                 case IUIUpdateListener.STATE_CONNECT_FAILURE:
                     Logger.test(TAG, "connect failure:" + deatail.text);
@@ -617,12 +629,13 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
             }
             mDevicesMap.clear();
             mDevicesMap.putAll(map);
-            Gson gson = new Gson();
-            String s = gson.toJson(infos);
             if (eventSink != null) {
                 HashMap map1 = new HashMap<String, String>();
-                map1.put("devices", s);
-                eventSink.success(map1);
+                Gson gson = new Gson();
+                map1.put("data", gson.toJson(infos));
+                map1.put("ack", STATE_SEARCH_RESULT);
+                String toJson = gson.toJson(map1);
+                eventSink.success(toJson);
             } else {
                 Log.e(TAG, "error :eventSink not init");
             }
@@ -673,8 +686,13 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
 
         @Override
         public void handleMessage(Message msg) {
+            boolean b = false;
+            if (msg.what == IUIUpdateListener.STATE_SEARCH_SUCCESS || msg.what == IUIUpdateListener.STATE_SEARCH_ING) {
+                b = changeSearchType(msg.what);
+            } else {
+                changeConnectType(msg.what);
+            }
 
-            boolean b = changeSearchType(msg.what);
             Activity mainActivity = mReference.get();
             if (mainActivity == null) {
                 return;
@@ -685,6 +703,33 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
                     break;
                 case IUIUpdateListener.STATE_SEARCH_ING:
                     if (b) browse();
+                    break;
+                case IUIUpdateListener.STATE_SEARCH_NO_RESULT: {
+                    Map map = new HashMap();
+                    map.put("ack", IUIUpdateListener.STATE_SEARCH_NO_RESULT);
+                    Gson gson = new Gson();
+                    String toJson = gson.toJson(map);
+                    eventSink.success(toJson);
+                    break;
+                }
+
+                case IUIUpdateListener.STATE_CONNECT_SUCCESS: {
+                    Map map = new HashMap();
+                    map.put("ack", IUIUpdateListener.STATE_CONNECT_SUCCESS);
+                    map.put("data", msg.obj);
+                    Gson gson = new Gson();
+                    String toJson = gson.toJson(map);
+                    eventSink.success(toJson);
+                    break;
+                }
+
+                case IUIUpdateListener.STATE_DISCONNECT:
+                    Map map = new HashMap();
+                    map.put("ack", IUIUpdateListener.STATE_CONNECT_SUCCESS);
+//                    map.put("data", msg.obj);
+                    Gson gson = new Gson();
+                    String toJson = gson.toJson(map);
+                    eventSink.success(toJson);
                     break;
             }
 
@@ -704,23 +749,6 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
     private static final int REQUEST_CAMERA_PERMISSION = 2;
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 4;
 
-
-    public static final int TYPE_URL = 1;
-    public static final int TYPE_MIRROR = 2;
-    public static final int TYPE_SCREEN = 100;
-    public static final int TYPE_AUDIO = 101;
-    public static final int TYPE_VIDEO = 102;
-    public static final int TYPE_IMAGE = 103;
-    public static final int LOOP_MODE_UNDEFINED = -1;
-    public static final int LOOP_MODE_DEFAULT = 0;
-    public static final int LOOP_MODE_SINGLE = 1;
-    public static final int LOOP_MODE_ALL = 2;
-    public static final int MONITOR_START = 1;
-    public static final int MONITOR_STOP = 2;
-    public static final int MONITOR_PAUSE = 3;
-    public static final int MONITOR_RESUME = 4;
-
-    //    private static final String SDCARD_LOCAL_MEDIA_PATH = Environment.getExternalStorageDirectory()
     private FlutterpluginhpplayPlugin.NetworkReceiver mNetworkReceiver;
 
 }
