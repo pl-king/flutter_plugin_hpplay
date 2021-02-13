@@ -3,25 +3,38 @@
   <component name="AndroidLogFilters">
     <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="Show only selected application" />
   </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="e7cb7d3c-6b15-41fd-888d-f7e86318cd96" name="Default Changelist" comment="aar发布到本地maven库,并且插件上传到pub">
-      <change afterPath="$PROJECT_DIR$/android/.idea/caches/build_file_checksums.ser" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/example/ios/Flutter/.last_build_id" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/example/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/CHANGELOG.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/android/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/src/main/java/com/hpplay/sdk/source/test/AllCast.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/src/main/java/com/hpplay/sdk/source/test/AllCast.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/src/main/java/com/hpplay/sdk/source/test/LelinkHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/src/main/java/com/hpplay/sdk/source/test/LelinkHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/src/main/java/com/pl/flutter_plugin_hpplay/FlutterPluginHpplayPlugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/src/main/java/com/pl/flutter_plugin_hpplay/FlutterPluginHpplayPlugin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/example/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/example/lib/main.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/example/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/example/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/flutter_plugin_hpplay.iml" beforeDir="false" afterPath="$PROJECT_DIR$/flutter_plugin_hpplay.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/flutter_plugin_hpplay/lib/flutterpluginhpplay.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/flutterpluginhpplay.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/flutter_plugin_hpplay.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/flutter_plugin_hpplay.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/flutter_plugin_hpplay_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/flutter_plugin_hpplay_test.dart" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,7 +43,6 @@
   <component name="DefaultGradleProjectSettings">
     <option name="isMigrated" value="true" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="LV9LTCWCQ855TCIJ" />
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
@@ -39,43 +51,34 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="IgnoredFileRootStore">
-    <option name="generatedRoots">
-      <set>
-        <option value="D:\Users\Dell\AndroidStudioProjects\flutter_plugin_hpplay\.idea" />
-      </set>
-    </option>
-  </component>
   <component name="ProjectId" id="1c5WzaYRChgGxPq0bcrmim1KhJ4" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="dart.analysis.tool.window.force.activate" value="false" />
+    <property name="dart.analysis.tool.window.visible" value="false" />
     <property name="io.flutter.reload.alreadyRun" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="flutter.settings" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/lib" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\Users\Dell\AndroidStudioProjects\flutter_plugin_hpplay" />
       <recent name="D:\Users\Dell\AndroidStudioProjects\flutter_plugin_hpplay\android" />
     </key>
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -170,18 +173,16 @@
         </entry>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
-    <option name="OPEN_TABS">
-      <set>
-        <option value="1" />
-        <option value="2" />
-      </set>
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="1" value="TOOL_WINDOW" />
+        <entry key="2" value="TOOL_WINDOW" />
+      </map>
     </option>
     <option name="RECENT_FILTERS">
       <map>
@@ -197,11 +198,26 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="init success im sc" />
     <MESSAGE value="加入hpplay 代碼 ,出現問題是 aar引用" />
     <option name="LAST_COMMIT_MESSAGE" value="加入hpplay 代碼 ,出現問題是 aar引用" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="204" y="100" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1613184051820">
+      <screen x="0" y="23" width="1440" height="831" />
+    </state>
+    <state x="204" y="100" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.831@0.23.1440.831" timestamp="1613184051820" />
+    <state x="241" y="77" key="SettingsEditor" timestamp="1613184065867">
+      <screen x="0" y="23" width="1440" height="831" />
+    </state>
+    <state x="241" y="77" key="SettingsEditor/0.23.1440.831@0.23.1440.831" timestamp="1613184065867" />
+    <state x="348" y="234" key="git4idea.merge.GitPullDialog" timestamp="1613184515811">
+      <screen x="0" y="23" width="1440" height="831" />
+    </state>
+    <state x="348" y="234" key="git4idea.merge.GitPullDialog/0.23.1440.831@0.23.1440.831" timestamp="1613184515811" />
   </component>
 </project>
