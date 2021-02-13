@@ -9,27 +9,23 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
-import android.Manifest;
-import android.app.Activity;
-import android.content.BroadcastReceiver;
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.hpplay.common.utils.NetworkUtil;
+import com.hpplay.sdk.source.api.IBindSdkListener;
+import com.hpplay.sdk.source.api.IConnectListener;
+import com.hpplay.sdk.source.api.ILelinkPlayerListener;
+import com.hpplay.sdk.source.api.LelinkPlayerInfo;
+import com.hpplay.sdk.source.api.LelinkSourceSDK;
+import com.hpplay.sdk.source.browse.api.IBrowseListener;
 import com.hpplay.sdk.source.browse.api.ILelinkServiceManager;
 import com.hpplay.sdk.source.browse.api.LelinkServiceInfo;
-import com.hpplay.sdk.source.test.AllCast;
-import com.hpplay.sdk.source.test.IUIUpdateListener;
-import com.hpplay.sdk.source.test.LelinkHelper;
 import com.hpplay.sdk.source.test.SDKManager;
 import com.hpplay.sdk.source.test.bean.MessageDeatail;
 import com.hpplay.sdk.source.test.utils.Logger;
@@ -53,91 +49,62 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 
-import com.hpplay.sdk.source.test.AllCast;
-import com.hpplay.sdk.source.test.IUIUpdateListener;
-import com.hpplay.sdk.source.test.LelinkHelper;
-import com.hpplay.sdk.source.test.SDKManager;
-import com.hpplay.sdk.source.test.bean.MessageDeatail;
-import com.hpplay.sdk.source.test.utils.Logger;
-import com.hpplay.sdk.source.test.utils.ToastUtil;
-
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-
-import io.flutter.embedding.engine.plugins.FlutterPlugin;
-import io.flutter.plugin.common.MethodCall;
-import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
-
-import static com.hpplay.sdk.source.test.IUIUpdateListener.STATE_SEARCH_RESULT;
 
 /**
  * FlutterpluginhpplayPlugin
  */
-public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
+public class FlutterpluginhpplayPlugin extends Activity implements FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private MethodChannel channel;
     private Activity context;
+    private UIHandler mUiHandler;
 
-    public static final int CONNECT_INIT = 1;
-    public static final int CONNECT_CONNECT = 2;
-    public static final int CONNECT_DISCONNECT = 3;
-    public static final int CONNECT_PLAYV = 3;
-    public static final int CONNECT_PLAYP = 4;
-    public static final boolean searching = true;
-    public static final int CODE_SEARCHING = 1;
-    public static final int CODE_SEARCHED = 0;
 
+    private static final int MSG_SEARCH_EMPTY = 98;
+    private static final int MSG_SEARCH_FAILED = 99;
+    private static final int MSG_SEARCH_RESULT = 100;
+
+    private static final int MSG_CONNECT_FAILURE = 101;
+    private static final int MSG_CONNECT_SUCCESS = 102;
+    private static final int MSG_UPDATE_PROGRESS = 103;
+    private static final int MSG_PLAY_STATE_START = 120;
+    private static final int MSG_PLAY_STATE_LOADING = 121;
+    private static final int MSG_PLAY_STATE_PAUSE = 122;
+    private static final int MSG_PLAY_STATE_COMPLETION = 123;
+    private static final int MSG_PLAY_STATE_STOP = 124;
+    private static final int MSG_PLAY_STATE_SEEKCOMPLETE = 125;
+    private static final int MSG_PLAY_STATE_ERROR = 126;
+
+//    private static final int
+
+    private static final String APP_ID = "12688";
+    private static final String APP_SECRET = "8914d933be4c002e3b49cd628eb9ead5";
+    private boolean isPause;
+//    public static final int CONNECT_INIT = 1;
+//    public static final int CONNECT_CONNECT = 2;
+//    public static final int CONNECT_DISCONNECT = 3;
+//    public static final int CONNECT_PLAYV = 3;
+//    public static final int CONNECT_PLAYP = 4;
+//    public static final boolean searching = true;
+//    public static final int CODE_SEARCHING = 1;
+//    public static final int CODE_SEARCHED = 0;
+
+
+    public static final int CHECKEDID_NET_VIDEO = 0;
+    public static final int CHECKEDID_NET_MUSIC = 1;
+    public static final int CHECKEDID_NET_PICTURE = 2;
+    public static final int CHECKEDID_LOCAL_VIDEO = 3;
+    public static final int CHECKEDID_LOCAL_MUSIC = 4;
+    public static final int CHECKEDID_LOCAL_PICTURE = 5;
+    public Object deviceInfo;
     //连接状态
     public int mConnectType = 0;
 
-    //搜索状态 搜索中 搜索完成
-    public int mSearchedType = CODE_SEARCHED;
+//    //搜索状态 搜索中 搜索完成
+//    public int mSearchedType = CODE_SEARCHED;
 
+    public boolean mInit = false;
 
-    public void startSearch() {
-
-        if (null != mDelayHandler) {
-            mDelayHandler.removeMessages(IUIUpdateListener.STATE_SEARCH_ING);
-            mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_ING,
-                    TimeUnit.SECONDS.toMillis(1));
-        }
-
-    }
-//
-//    public void stopSearch() {
-//        Message handler = mSearchHandler.obtainMessage();
-//        handler.what = CODE_SEARCHED;
-//        mSearchHandler.handleMessage(handler);
-//    }
-
-    public boolean changeConnectType(int type) {
-        if (mConnectType == type) {
-            return false;
-        }
-        mSearchedType = type;//更新全局变量表示状态改变
-        Map<String, Integer> map = new HashMap();
-        map.put("search", type);
-        sendAck(mSearchedType, map);
-        return true;
-    }
-
-    public boolean changeSearchType(int type) {
-        if (mSearchedType == type) {
-            return false;
-        }
-        mSearchedType = type;//更新全局变量表示状态改变
-        Map<String, Integer> map = new HashMap();
-        map.put("search", type);
-        sendAck(mSearchedType, map);
-        return true;
-    }
 
     public void sendAck(int act, Map data) {
         Map map = new HashMap();
@@ -155,42 +122,42 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), "sample.flutter.io/test_event_channel").setStreamHandler(streamHandler);
     }
 
-    public static void registerWith(Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutterpluginhpplay");
-        channel.setMethodCallHandler(new FlutterpluginhpplayPlugin());
-    }
-
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
+        Log.e(FlutterpluginhpplayPlugin.TAG, call.method);
         if (call.method.equals("initHpplay")) {
-            initDates();
+            result.success(initDates());
         } else if (call.method.equals("getNetWorkName")) {
             result.success("WiFi:" + NetworkUtil.getNetWorkName(context));
         } else if (call.method.equals("HpplayBrowse")) {
-            startSearch();
+            LelinkSourceSDK.getInstance().startBrowse();
         } else if (call.method.equals("HpplayConnect")) {
             String deviceIp = call.argument("LelinkServiceInfoJson");
             Log.e(TAG, deviceIp);
 //            Gson gson = new Gson();
 //            LelinkServiceInfo info = gson.fromJson(infoJson, LelinkServiceInfo.class);
-            info = mDevicesMap.get(deviceIp);
-            connect(info);
+            mSelectInfo = mDevicesMap.get(deviceIp);
+            connect(mSelectInfo);
         } else if (call.method.equals("HpplayCloseConnect")) {
-            disConnect();
+            LelinkSourceSDK.getInstance().disConnect(mSelectInfo);
+            mSelectInfo = null;
         } else if (call.method.equals("HpplayPlay")) {
             int mediaType = call.argument("MediaType");
             String mediaUrl = call.argument("MediaUrl");
-            play(mediaType, mediaUrl);
+            startPlayMedia(mediaType, mediaUrl);
+        } else if (call.method.equals("HpplaySeekTo")) {
+            int position = call.argument("position");
+            LelinkSourceSDK.getInstance().seekTo(position);
         } else if (call.method.equals("HpplayPause")) {
-            pause();
+            LelinkSourceSDK.getInstance().pause();
         } else if (call.method.equals("HppalyResume")) {
-            resume();
+            LelinkSourceSDK.getInstance().resume();
         } else if (call.method.equals("HpplayStop")) {
-            stop();
+            LelinkSourceSDK.getInstance().stopPlay();
         } else if (call.method.equals("HpplayVoulumeUp")) {
-            mLelinkHelper.voulumeUp();
+            LelinkSourceSDK.getInstance().addVolume();
         } else if (call.method.equals("HpplayVoulumeDown")) {
-            mLelinkHelper.voulumeDown();
+            LelinkSourceSDK.getInstance().subVolume();
         } else if (call.method.equals("HpplayGetConnectInfos")) {
             showConnetDevice();
         } else {
@@ -202,68 +169,45 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
 //  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
 //    channel.setMethodCallHandler(null);
 //  }
-    private boolean showConnetDevice() {
-        List<LelinkServiceInfo> connectInfos = mLelinkHelper.getConnectInfos();
-        Logger.e(TAG, connectInfos.toString());
-        if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
-            for (int i = 0; i < connectInfos.size(); i++) {
-                if (info != connectInfos.get(i))
-                    mLelinkHelper.disConnect(connectInfos.get(i));
-                else {
-                    eventSink.success(connectInfos.get(i).getName());
-                    return true;
-                }
-            }
-
+    ///获取正在连接的设备
+    private void showConnetDevice() {
+        if (deviceInfo != null) {
+            ackSuccess(MSG_CONNECT_SUCCESS, deviceInfo);
         } else {
-//                ToastUtil.show(context, "请先连接设备");
-        }
-        return false;
-    }
-
-    private void disConnect() {
-        List<LelinkServiceInfo> connectInfos = null;
-        if (null != mLelinkHelper) {
-            connectInfos = mLelinkHelper.getConnectInfos();
-        }
-        Logger.test(TAG, "stop click");
-        if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
-            Logger.test(TAG, "stop click");
-            for (int i = 0; i < connectInfos.size(); i++) {
-                boolean isDis = mLelinkHelper.disConnect(connectInfos.get(i));
-            }
-
-        } else {
-            ToastUtil.show(context, "请先连接设备");
+            ackSuccess(MSG_CONNECT_FAILURE);
         }
     }
 
-    private void initDates() {
-        mDelayHandler = new FlutterpluginhpplayPlugin.UIHandler(context);
+    private boolean initDates() {
+        if (!mInit) {
+            mDelayHandler = new FlutterpluginhpplayPlugin.UIHandler(context);
+            mSDKManager = new SDKManager(context);
+            mSDKManager.startMonitor();
+            mNetworkReceiver = new FlutterpluginhpplayPlugin.NetworkReceiver(context);
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(WIFI_AP_STATE_CHANGED_ACTION);
+            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+            context.registerReceiver(mNetworkReceiver, intentFilter);
 
-        mSDKManager = new SDKManager(context);
-        mSDKManager.startMonitor();
-        mNetworkReceiver = new FlutterpluginhpplayPlugin.NetworkReceiver(context);
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(WIFI_AP_STATE_CHANGED_ACTION);
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        context.registerReceiver(mNetworkReceiver, intentFilter);
-
-        if (ContextCompat.checkSelfPermission(context.getApplication(),
-                Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_DENIED
-                && ContextCompat.checkSelfPermission(context,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(context,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED) {
-            Log.e(TAG, "有权限");
-            initLelinkHelper();
+            if (ContextCompat.checkSelfPermission(context.getApplication(),
+                    Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_DENIED
+                    && ContextCompat.checkSelfPermission(context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_DENIED && ContextCompat.checkSelfPermission(context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED) {
+                Log.e(TAG, "有权限");
+                initLelinkHelper();
+            } else {
+                // 若没有授权，会弹出一个对话框（这个对话框是系统的，开发者不能自己定制），用户选择是否授权应用使用系统权限
+                ActivityCompat.requestPermissions(context, new String[]{Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_MUST_PERMISSION);
+                Log.e(TAG, "没有权限");
+                initLelinkHelper();
+            }
+            mInit = true;
         } else {
-            // 若没有授权，会弹出一个对话框（这个对话框是系统的，开发者不能自己定制），用户选择是否授权应用使用系统权限
-            ActivityCompat.requestPermissions(context, new String[]{Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_MUST_PERMISSION);
-            Log.e(TAG, "没有权限");
-            initLelinkHelper();
+            return false;
         }
-
+        return mInit;
     }
 
     @Override
@@ -311,318 +255,622 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
     }
 
     private void initLelinkHelper() {
-        mLelinkHelper = LelinkHelper.getInstance(context.getApplicationContext());
-        mLelinkHelper.setUIUpdateListener(mUIUpdateListener);
+//        mLelinkHelper = LelinkHelper.getInstance(context.getApplicationContext());
+//        mLelinkHelper.setUIUpdateListener(mUIUpdateListener);
+        //sdk初始化
+        LelinkSourceSDK.getInstance()
+                .setBrowseResultListener(mBrowseListener)
+                .setPlayListener(mLelinkPlayerListener)
+                .setConnectListener(mConnectListener)
+                .setBindSdkListener(mBindSdkListener)
+                .setDebugMode(true)
+                .setSdkInitInfo(context.getApplicationContext(), APP_ID, APP_SECRET).bindSdk();
+
+        mUiHandler = new UIHandler(this);
     }
 
-    private IUIUpdateListener mUIUpdateListener = new IUIUpdateListener() {
+    ///搜索事件监听
+    IBrowseListener mBrowseListener = new IBrowseListener() {
 
         @Override
-        public void onUpdate(int what, MessageDeatail deatail) {
-            switch (what) {
-                case IUIUpdateListener.STATE_SEARCH_SUCCESS:
-                    if (isFirstBrowse) {
-                        isFirstBrowse = false;
-                        ToastUtil.show(context, "搜索成功");
-                        Log.e(TAG, "搜索成功");
+        public void onBrowse(int i, List<LelinkServiceInfo> list) {
+            Log.i(TAG, "-------------->list size : " + list.size());
+            if (i == IBrowseListener.BROWSE_ERROR_AUTH) {
+                mUiHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context.getApplicationContext(), "授权失败", Toast.LENGTH_SHORT).show();
                     }
-                    if (null != mDelayHandler) {
-                        mDelayHandler.removeMessages(what);
-                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
-                                TimeUnit.SECONDS.toMillis(1));
-                    }
-                    break;
-                case IUIUpdateListener.STATE_SEARCH_ERROR:
-                    if (null != mDelayHandler) {
-                        mDelayHandler.removeMessages(what);
-                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
-                                TimeUnit.SECONDS.toMillis(1));
-                    }
-                    break;
-                case IUIUpdateListener.STATE_SEARCH_NO_RESULT:
-                    if (null != mDelayHandler) {
-                        mDelayHandler.removeMessages(what);
-                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_NO_RESULT,
-                                TimeUnit.SECONDS.toMillis(1));
-                    }
-                    break;
-                //------------------------------------------------------------------------------------
-                case IUIUpdateListener.STATE_CONNECT_SUCCESS:
-                    Log.e("pl123", "onConnect3");
-                    if (null != mDelayHandler) {
-                        Log.e("pl123", "onConnect3。1");
-                        mDelayHandler.removeMessages(what);
-                        Message message = new Message();
-                        message.obj = deatail.text;
-                        message.what = IUIUpdateListener.STATE_CONNECT_SUCCESS;
-                        mDelayHandler.sendMessageDelayed(message,
-                                TimeUnit.SECONDS.toMillis(1));
-                        Log.e("pl123", "onConnect3。2");
-                    }
-                    break;
-                case IUIUpdateListener.STATE_DISCONNECT:
-                    if (null != mDelayHandler) {
-                        mDelayHandler.removeMessages(what);
-                        Message message = new Message();
-                        message.obj = deatail.text;
-                        message.what = IUIUpdateListener.STATE_DISCONNECT;
-                        mDelayHandler.sendMessageDelayed(message,
-                                TimeUnit.SECONDS.toMillis(1));
-                    }
-                    break;
-                case IUIUpdateListener.STATE_CONNECT_FAILURE:
-                    Logger.test(TAG, "connect failure:" + deatail.text);
-                    Log.e(TAG, "ToastUtil " + deatail.text);
-                    ToastUtil.show(context, deatail.text);
-//                    mBrowseAdapter.setSelectInfo(null);
-//                    mBrowseAdapter.notifyDataSetChanged();
-//                    // 更新列表
-//                    updateConnectAdapter();
-                    break;
-                case IUIUpdateListener.STATE_PLAY:
-                    Logger.test(TAG, "callback play");
-//                    isPause = false;
-                    Log.e(TAG, "ToastUtil 开始播放");
-                    ToastUtil.show(context, "开始播放");
-                    break;
-                case IUIUpdateListener.STATE_LOADING:
-                    Logger.test(TAG, "callback loading");
-//                    isPause = false;
-                    Log.e(TAG, "ToastUtil 开始加载");
-                    ToastUtil.show(context, "开始加载");
-                    break;
-                case IUIUpdateListener.STATE_PAUSE:
-                    Logger.test(TAG, "callback pause");
-                    Log.e(TAG, "ToastUtil 暂停播放");
-                    ToastUtil.show(context, "暂停播放");
-//                    isPause = true;
-                    break;
-                case IUIUpdateListener.STATE_STOP:
-                    Logger.test(TAG, "callback stop");
-//                    isPause = false;
-                    Log.e(TAG, "ToastUtil 播放结束");
-                    ToastUtil.show(context, "播放结束");
-                    break;
-                case IUIUpdateListener.STATE_SEEK:
-                    Logger.test(TAG, "callback seek:" + deatail.text);
-                    Logger.d(TAG, "ToastUtil seek完成:" + deatail.text);
-                    ToastUtil.show(context, "seek完成" + deatail.text);
-                    break;
-                case IUIUpdateListener.STATE_PLAY_ERROR:
-                    Logger.test(TAG, "callback error:" + deatail.text);
-                    ToastUtil.show(context, "播放错误：" + deatail.text);
-                    break;
-                case IUIUpdateListener.STATE_POSITION_UPDATE:
-                    Logger.test(TAG, "callback position update:" + deatail.text);
-                    long[] arr = (long[]) deatail.obj;
-                    long duration = arr[0];
-                    long position = arr[1];
-                    Logger.d(TAG, "ToastUtil 总长度：" + duration + " 当前进度:" + position);
-//                    mProgressBar.setMax((int) duration);
-//                    mProgressBar.setProgress((int) position);
-                    break;
-                case IUIUpdateListener.STATE_COMPLETION:
-                    Logger.test(TAG, "callback completion");
-                    Logger.d(TAG, "ToastUtil 播放完成");
-                    ToastUtil.show(context, "播放完成");
-                    break;
-                case IUIUpdateListener.STATE_INPUT_SCREENCODE:
-                    Logger.test(TAG, "input screencode");
-                    ToastUtil.show(context, deatail.text);
-//                    showScreenCodeDialog();
-                    break;
-                case IUIUpdateListener.RELEVANCE_DATA_UNSUPPORT:
-                    Logger.test(TAG, "unsupport relevance data");
-                    ToastUtil.show(context, deatail.text);
-                    break;
-                case IUIUpdateListener.STATE_SCREENSHOT:
-                    Logger.test(TAG, "unsupport relevance data");
-                    ToastUtil.show(context, deatail.text);
-                    break;
+                });
+
+                mUiHandler.sendMessage(Message.obtain(null, MSG_SEARCH_FAILED));
+                return;
+            }
+            if (mUiHandler != null) {
+                mUiHandler.sendMessage(Message.obtain(null, MSG_SEARCH_RESULT, list));
             }
         }
 
     };
+    ///播放事件监听
+    ILelinkPlayerListener mLelinkPlayerListener = new ILelinkPlayerListener() {
 
-    private void browse() {
+        @Override
+        public void onLoading() {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_LOADING));
 
-        if (null != mLelinkHelper) {
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context.getApplicationContext(), "开始加载", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
-            //            boolean isLelinkOpen = mSwitchLeLink.isChecked();
-            //            boolean isDLNAOpen = mSwitchDLNA.isChecked();
-            boolean isLelinkOpen = true;
-            boolean isDLNAOpen = true;
+        @Override
+        public void onStart() {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_START));
 
-            int type;
-            String text;
-            if (isLelinkOpen && isDLNAOpen) {
-                text = "All";
-                type = ILelinkServiceManager.TYPE_ALL;
-            } else if (isLelinkOpen) {
-                text = "Lelink";
-                type = ILelinkServiceManager.TYPE_LELINK;
-            } else if (isDLNAOpen) {
-                text = "DLNA";
-                type = ILelinkServiceManager.TYPE_DLNA;
-            } else {
-                text = "All";
-                type = ILelinkServiceManager.TYPE_ALL;
+
+            isPause = false;
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context.getApplicationContext(), "开始播放", Toast.LENGTH_SHORT).show();
+//                    mirrorSwitchChange();
+                }
+            });
+
+        }
+
+        @Override
+        public void onPause() {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_PAUSE));
+
+            isPause = true;
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context.getApplicationContext(), "暂停播放", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void onCompletion() {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_COMPLETION));
+
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context.getApplicationContext(), "播放完成", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        @Override
+        public void onStop() {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_STOP));
+
+            isPlayMirror = false;
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context.getApplicationContext(), "播放停止", Toast.LENGTH_SHORT).show();
+//                    mirrorSwitchChange();
+                }
+            });
+        }
+
+        @Override
+        public void onSeekComplete(int i) {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_SEEKCOMPLETE));
+
+        }
+
+        @Override
+        public void onInfo(final int i, final int i1) {
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (i == ILelinkPlayerListener.INFO_MIRROR_STATE) {
+                        if (i1 == ILelinkPlayerListener.INFO_MIRROR_RESUME) {
+                            Toast.makeText(context.getApplicationContext(), "镜像恢复", Toast.LENGTH_SHORT).show();
+                        } else if (i1 == ILelinkPlayerListener.INFO_MIRROR_PAUSE) {
+                            Toast.makeText(context.getApplicationContext(), "镜像暂停", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onInfo(int what, final String data) {
+            mUiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context.getApplicationContext(), "当前倍率是：" + data, Toast.LENGTH_SHORT).show();
+//                    mirrorSwitchChange();
+                }
+            });
+        }
+
+        String text = null;
+
+        @Override
+        public void onError(int what, int extra) {
+            mUiHandler.sendMessage(Message.obtain(null, MSG_PLAY_STATE_ERROR));
+
+
+            Log.d(TAG, "onError what:" + what + " extra:" + extra);
+            if (what == PUSH_ERROR_INIT) {
+                if (extra == PUSH_ERRROR_FILE_NOT_EXISTED) {
+                    text = "文件不存在";
+                } else if (extra == PUSH_ERROR_IM_OFFLINE) {
+                    text = "IM TV不在线";
+                } else if (extra == PUSH_ERROR_IMAGE) {
+
+                } else if (extra == PUSH_ERROR_IM_UNSUPPORTED_MIMETYPE) {
+                    text = "IM不支持的媒体类型";
+                } else {
+                    text = "未知";
+                }
+            } else if (what == MIRROR_ERROR_INIT) {
+                if (extra == MIRROR_ERROR_UNSUPPORTED) {
+                    text = "不支持镜像";
+                } else if (extra == MIRROR_ERROR_REJECT_PERMISSION) {
+                    text = "镜像权限拒绝";
+                } else if (extra == MIRROR_ERROR_DEVICE_UNSUPPORTED) {
+                    text = "设备不支持镜像";
+                } else if (extra == NEED_SCREENCODE) {
+                    text = "请输入投屏码";
+                }
+            } else if (what == MIRROR_ERROR_PREPARE) {
+                if (extra == MIRROR_ERROR_GET_INFO) {
+                    text = "获取镜像信息出错";
+                } else if (extra == MIRROR_ERROR_GET_PORT) {
+                    text = "获取镜像端口出错";
+                } else if (extra == NEED_SCREENCODE) {
+                    text = "请输入投屏码";
+                    mUiHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+//                            showScreenCodeDialog();
+                        }
+                    });
+                    if (extra == PREEMPT_UNSUPPORTED) {
+                        text = "投屏码模式不支持抢占";
+                    }
+                } else if (what == PUSH_ERROR_PLAY) {
+                    if (extra == PUSH_ERROR_NOT_RESPONSED) {
+                        text = "播放无响应";
+                    } else if (extra == NEED_SCREENCODE) {
+                        text = "请输入投屏码";
+                        mUiHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+//                                showScreenCodeDialog();
+                            }
+                        });
+                    } else if (extra == RELEVANCE_DATA_UNSUPPORTED) {
+                        text = "老乐联不支持数据透传,请升级接收端的版本！";
+                    } else if (extra == ILelinkPlayerListener.PREEMPT_UNSUPPORTED) {
+                        text = "投屏码模式不支持抢占";
+                    }
+                } else if (what == PUSH_ERROR_STOP) {
+                    if (extra == ILelinkPlayerListener.PUSH_ERROR_NOT_RESPONSED) {
+                        text = "退出 播放无响应";
+                    }
+                } else if (what == PUSH_ERROR_PAUSE) {
+                    if (extra == ILelinkPlayerListener.PUSH_ERROR_NOT_RESPONSED) {
+                        text = "暂停无响应";
+                    }
+                } else if (what == PUSH_ERROR_RESUME) {
+                    if (extra == ILelinkPlayerListener.PUSH_ERROR_NOT_RESPONSED) {
+                        text = "恢复无响应";
+                    }
+                }
+
+            } else if (what == MIRROR_PLAY_ERROR) {
+                if (extra == MIRROR_ERROR_FORCE_STOP) {
+                    text = "接收端断开";
+                } else if (extra == MIRROR_ERROR_PREEMPT_STOP) {
+                    text = "镜像被抢占";
+                }
+            } else if (what == MIRROR_ERROR_CODEC) {
+                if (extra == MIRROR_ERROR_NETWORK_BROKEN) {
+                    text = "镜像网络断开";
+                }
             }
-            Logger.test(TAG, "browse type:" + text);
-            Log.e(TAG, "browse type:" + text);
-            if (!isFirstBrowse) {
-                isFirstBrowse = true;
+            if (null != mUiHandler) {
+                mUiHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+//                        mirrorSwitchChange();
+                        Toast.makeText(context.getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
-            mLelinkHelper.browse(type);
-        } else {
-            ToastUtil.show(context, "权限不够");
-            if (null != mDelayHandler) {
-                mDelayHandler.removeCallbacksAndMessages(null);
-                mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
-                        TimeUnit.SECONDS.toMillis(1));
+
+        }
+
+        @Override
+        public void onVolumeChanged(float v) {
+
+        }
+
+        @Override
+        public void onPositionUpdate(long l, long l1) {
+            if (mUiHandler != null) {
+                Message msg = new Message();
+                msg.what = MSG_UPDATE_PROGRESS;
+                msg.arg1 = (int) l;
+                msg.arg2 = (int) l1;
+                mUiHandler.sendMessage(msg);
             }
         }
-    }
+    };
+    ///连接状态监听
+    IConnectListener mConnectListener = new IConnectListener() {
+        @Override
+        public void onConnect(LelinkServiceInfo lelinkServiceInfo, int extra) {
 
-    private void stopBrowse() {
-        Logger.test(TAG, "btn_stop_browse click");
-        if (null != mLelinkHelper) {
-            Logger.test(TAG, "stop browse");
-            Logger.d(TAG, "stop browse");
-            isFirstBrowse = false;
-            mLelinkHelper.stopBrowse();
-        } else {
-            ToastUtil.show(context, "未初始化");
+            Log.d(TAG, "onConnect:" + lelinkServiceInfo.getName());
+            if (mUiHandler != null) {
+                mUiHandler.sendMessage(Message.obtain(null, MSG_CONNECT_SUCCESS, extra, 0, lelinkServiceInfo));
+            }
         }
-    }
 
-    private void connect(LelinkServiceInfo info) {
-        if (null == mLelinkHelper) {
-            ToastUtil.show(context, "未初始化");
-            return;
+        @Override
+        public void onDisconnect(LelinkServiceInfo lelinkServiceInfo, int what, int extra) {
+            Log.d(TAG, "onDisconnect:" + lelinkServiceInfo.getName() + " disConnectType:" + what + " extra:" + extra);
+            String text = null;
+            if (what == IConnectListener.CONNECT_INFO_DISCONNECT) {
+                if (null != mUiHandler) {
+                    if (TextUtils.isEmpty(lelinkServiceInfo.getName())) {
+                        text = "pin码连接断开";
+                    } else {
+                        text = lelinkServiceInfo.getName() + "连接断开";
+                    }
+                }
+            } else if (what == IConnectListener.CONNECT_ERROR_FAILED) {
+                if (extra == IConnectListener.CONNECT_ERROR_IO) {
+                    text = lelinkServiceInfo.getName() + "连接失败";
+                } else if (extra == IConnectListener.CONNECT_ERROR_IM_WAITTING) {
+                    text = lelinkServiceInfo.getName() + "等待确认";
+                } else if (extra == IConnectListener.CONNECT_ERROR_IM_REJECT) {
+                    text = lelinkServiceInfo.getName() + "连接拒绝";
+                } else if (extra == IConnectListener.CONNECT_ERROR_IM_TIMEOUT) {
+                    text = lelinkServiceInfo.getName() + "连接超时";
+                } else if (extra == IConnectListener.CONNECT_ERROR_IM_BLACKLIST) {
+                    text = lelinkServiceInfo.getName() + "连接黑名单";
+                }
+            }
+            if (null != mUiHandler) {
+                mUiHandler.sendMessage(Message.obtain(null, MSG_CONNECT_FAILURE, text));
+
+            }
         }
-        List<LelinkServiceInfo> connectInfos = mLelinkHelper.getConnectInfos();
-        if (null != connectInfos && !connectInfos.isEmpty()) {
-//            Logger.test(TAG, "stop click");
-//            for (int i = 0; i < connectInfos.size(); i++) {
-//                if (info != connectInfos.get(i)) {
-//                    mLelinkHelper.disConnect(connectInfos.get(i));
-//                    Logger.test(TAG, "disConnect 000000:" + connectInfos.get(i).getName());
-//                }
+    };
+    //日志监听
+    IBindSdkListener mBindSdkListener = new IBindSdkListener() {
+        @Override
+        public void onBindCallback(boolean b) {
+//            Log.i("onBindCallback", "--------->" + b);
+//            // 打开本地日志开关
+//            LelinkSourceSDK.getInstance().setOption(IAPI.OPTION_49,true);
+//            setPassthroughListener();
+        }
+    };
+//    private IUIUpdateListener mUIUpdateListener = new IUIUpdateListener() {
 //
+//        @Override
+//        public void onUpdate(int what, MessageDeatail deatail) {
+//            switch (what) {
+//                case IUIUpdateListener.STATE_SEARCH_SUCCESS:
+//                    if (isFirstBrowse) {
+//                        isFirstBrowse = false;
+//                        ToastUtil.show(context, "搜索成功");
+//                        Log.e(TAG, "搜索成功");
+//                    }
+//                    if (null != mDelayHandler) {
+//                        mDelayHandler.removeMessages(what);
+//                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
+//                                TimeUnit.SECONDS.toMillis(1));
+//                    }
+//                    break;
+//                case IUIUpdateListener.STATE_SEARCH_ERROR:
+//                    if (null != mDelayHandler) {
+//                        mDelayHandler.removeMessages(what);
+//                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
+//                                TimeUnit.SECONDS.toMillis(1));
+//                    }
+//                    break;
+//                case IUIUpdateListener.STATE_SEARCH_NO_RESULT:
+//                    if (null != mDelayHandler) {
+//                        mDelayHandler.removeMessages(what);
+//                        mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_NO_RESULT,
+//                                TimeUnit.SECONDS.toMillis(1));
+//                    }
+//                    break;
+//                //-------------------------以上是搜索状态-----------------------------------------------------------
+//                case IUIUpdateListener.STATE_CONNECT_SUCCESS:
+//                    if (null != mDelayHandler) {
+//                        mDelayHandler.removeMessages(what);
+//                        Message message = new Message();
+//                        message.obj = deatail.obj;
+//                        message.what = IUIUpdateListener.STATE_CONNECT_SUCCESS;
+//                        mDelayHandler.sendMessageDelayed(message,
+//                                TimeUnit.SECONDS.toMillis(1));
+//                    }
+//                    break;
+//                case IUIUpdateListener.STATE_DISCONNECT:
+//                    if (null != mDelayHandler) {
+//                        mDelayHandler.removeMessages(what);
+//                        Message message = new Message();
+//                        message.obj = deatail.text;
+//                        message.what = IUIUpdateListener.STATE_DISCONNECT;
+//                        mDelayHandler.sendMessageDelayed(message,
+//                                TimeUnit.SECONDS.toMillis(1));
+//                    }
+//                    break;
+//                case IUIUpdateListener.STATE_CONNECT_FAILURE:
+//                    Logger.test(TAG, "connect failure:" + deatail.text);
+//                    Log.e(TAG, "ToastUtil " + deatail.text);
+//                    ToastUtil.show(context, deatail.text);
+//                    break;
+//                //-------------------------以上是连接状态-----------------------------------------------------------
+//                case IUIUpdateListener.STATE_PLAY:
+//                    ackSuccess(IUIUpdateListener.STATE_PLAY);
+//                    ToastUtil.show(context, "开始播放");
+//                    break;
+//                case IUIUpdateListener.STATE_LOADING:
+//                    ackSuccess(IUIUpdateListener.STATE_LOADING);
+//                    ToastUtil.show(context, "开始加载");
+//                    break;
+//                case IUIUpdateListener.STATE_PAUSE:
+//                    ackSuccess(IUIUpdateListener.STATE_PAUSE);
+//                    ToastUtil.show(context, "暂停播放");
+////                    isPause = true;
+//                    break;
+//                case IUIUpdateListener.STATE_STOP:
+//                    ackSuccess(IUIUpdateListener.STATE_STOP);
+//                    ToastUtil.show(context, "播放结束");
+//                    break;
+//                case IUIUpdateListener.STATE_SEEK:
+//                    Logger.test(TAG, "callback seek:" + deatail.text);
+//                    Logger.d(TAG, "ToastUtil seek完成:" + deatail.text);
+//                    ToastUtil.show(context, "seek完成" + deatail.text);
+//                    break;
+//                case IUIUpdateListener.STATE_PLAY_ERROR:
+//                    ackSuccess(IUIUpdateListener.STATE_COMPLETION);
+//                    ToastUtil.show(context, "播放错误：" + deatail.text);
+//                    break;
+//                case IUIUpdateListener.STATE_POSITION_UPDATE:
+//                    long[] arr = (long[]) deatail.obj;
+//                    long duration = arr[0];
+//                    long position = arr[1];
+//                    Logger.d(TAG, "ToastUtil 总长度：" + duration + " 当前进度:" + position);
+//                    ackSuccess(IUIUpdateListener.STATE_POSITION_UPDATE, arr);
+//                    break;
+//                case IUIUpdateListener.STATE_COMPLETION:
+//                    ackSuccess(IUIUpdateListener.STATE_COMPLETION);
+//                    ToastUtil.show(context, "播放完成");
+//                    break;
+//                case IUIUpdateListener.STATE_INPUT_SCREENCODE:
+//                    Logger.test(TAG, "input screencode");
+//                    ToastUtil.show(context, deatail.text);
+////                    showScreenCodeDialog();
+//                    break;
+//                case IUIUpdateListener.RELEVANCE_DATA_UNSUPPORT:
+//                    Logger.test(TAG, "unsupport relevance data");
+//                    ToastUtil.show(context, deatail.text);
+//                    break;
+//                case IUIUpdateListener.STATE_SCREENSHOT:
+//                    Logger.test(TAG, "unsupport relevance data");
+//                    ToastUtil.show(context, deatail.text);
+//                    break;
 //            }
-//            ToastUtil.show(context, "选中了:" + info.getName()
-//                    + " type:" + info.getTypes());
-            Logger.test(TAG, "还有没有断开的连接 connect:" + connectInfos.toString());
-//            mLelinkHelper.connect(info);
-        } else {
-            mLelinkHelper.connect(info);
-            ToastUtil.show(context, "connect");
-        }
-        Logger.test(TAG, "connect click:" + info.getName());
+//        }
+//
+//    };
+
+//    private void browse() {
+//
+//        if (null != mLelinkHelper) {
+//
+//            //            boolean isLelinkOpen = mSwitchLeLink.isChecked();
+//            //            boolean isDLNAOpen = mSwitchDLNA.isChecked();
+//            boolean isLelinkOpen = true;
+//            boolean isDLNAOpen = true;
+//
+//            int type;
+//            String text;
+//            if (isLelinkOpen && isDLNAOpen) {
+//                text = "All";
+//                type = ILelinkServiceManager.TYPE_ALL;
+//            } else if (isLelinkOpen) {
+//                text = "Lelink";
+//                type = ILelinkServiceManager.TYPE_LELINK;
+//            } else if (isDLNAOpen) {
+//                text = "DLNA";
+//                type = ILelinkServiceManager.TYPE_DLNA;
+//            } else {
+//                text = "All";
+//                type = ILelinkServiceManager.TYPE_ALL;
+//            }
+//            Logger.test(TAG, "browse type:" + text);
+//            Log.e(TAG, "browse type:" + text);
+//            if (!isFirstBrowse) {
+//                isFirstBrowse = true;
+//            }
+//            mLelinkHelper.browse(type);
+//        } else {
+//            ToastUtil.show(context, "权限不够");
+//            if (null != mDelayHandler) {
+//                mDelayHandler.removeCallbacksAndMessages(null);
+//                mDelayHandler.sendEmptyMessageDelayed(IUIUpdateListener.STATE_SEARCH_SUCCESS,
+//                        TimeUnit.SECONDS.toMillis(1));
+//            }
+//        }
+//    }
+
+//    private void stopBrowse() {
+//        Logger.test(TAG, "btn_stop_browse click");
+//        if (null != mLelinkHelper) {
+//            Logger.test(TAG, "stop browse");
+//            Logger.d(TAG, "stop browse");
+//            isFirstBrowse = false;
+//            mLelinkHelper.stopBrowse();
+//        } else {
+//            ToastUtil.show(context, "未初始化");
+//        }
+//    }
+
+    private void connect(LelinkServiceInfo serviceInfo) {
+        LelinkSourceSDK.getInstance().connect(serviceInfo);
     }
 
-    private void play(int mediaType, String url) {
-        isPlayMirror = false;
-        if (null == mLelinkHelper) {
-            ToastUtil.show(context, "未初始化或未选择设备");
-            return;
-        }
-        List<LelinkServiceInfo> connectInfos = mLelinkHelper.getConnectInfos();
-        Logger.e(TAG, "connect click:" + connectInfos.toString());
-        if (null == connectInfos || connectInfos.isEmpty()) {
-            ToastUtil.show(context, "请先连接设备");
-            return;
-        }
+    void startPlayMedia(int checkedId, String url) {
+//        if (null == mSelectInfo) {
+//            Toast.makeText(getApplicationContext(), "请选择接设备", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
 //        if (isPause) {
-//            Logger.test(TAG, "resume click");
 //            isPause = false;
 //            // 暂停中
-//            mLelinkHelper.resume();
+//            LelinkSourceSDK.getInstance().resume();
 //            return;
-//        } else {
-//            Logger.test(TAG, "play click");
 //        }
 //        int checkedId = mRadioGroup.getCheckedRadioButtonId();
-//        int mediaType = 0;
+        int mediaType = 0;
         String mediaTypeStr = null;
         boolean isLocalFile = false;
-//        String url = null;
-        switch (mediaType) {
-            case AllCast.MEDIA_TYPE_VIDEO:
-//                url = mEtNetVideo.getText().toString();
+//        String url = url;
+        switch (checkedId) {
+            case CHECKEDID_NET_VIDEO:
+                mediaType = LelinkSourceSDK.MEDIA_TYPE_VIDEO;
+
                 mediaTypeStr = "NetVideo";
                 break;
-            case AllCast.MEDIA_TYPE_AUDIO:
-//                url = mEtNetMusic.getText().toString();
+            case CHECKEDID_NET_MUSIC:
+                mediaType = LelinkSourceSDK.MEDIA_TYPE_AUDIO;
+
                 mediaTypeStr = "NetMusic";
                 break;
-            case AllCast.MEDIA_TYPE_IMAGE:
-                mediaType = AllCast.MEDIA_TYPE_IMAGE;
-//                url = mEtNetPicture.getText().toString();
+            case CHECKEDID_NET_PICTURE:
+                mediaType = LelinkSourceSDK.MEDIA_TYPE_IMAGE;
+
                 mediaTypeStr = "NetPicture";
                 break;
+            case CHECKEDID_LOCAL_VIDEO:
+                mediaType = LelinkSourceSDK.MEDIA_TYPE_VIDEO;
+                isLocalFile = true;
+
+                mediaTypeStr = "LocalVideo";
+                break;
+            case CHECKEDID_LOCAL_MUSIC:
+                mediaType = LelinkSourceSDK.MEDIA_TYPE_AUDIO;
+                isLocalFile = true;
+
+                mediaTypeStr = "LocalMusic";
+                break;
+            case CHECKEDID_LOCAL_PICTURE:
+                mediaType = LelinkSourceSDK.MEDIA_TYPE_IMAGE;
+                isLocalFile = true;
+
+                mediaTypeStr = "LocalPicture";
+                break;
+        }
+        Log.i(TAG, "start play url:" + url + " type:" + mediaTypeStr);
+
+        LelinkPlayerInfo lelinkPlayerInfo = new LelinkPlayerInfo();
+        if (isLocalFile) {
+            lelinkPlayerInfo.setLocalPath(url);
+        } else {
+            lelinkPlayerInfo.setUrl(url);
+        }
+        lelinkPlayerInfo.setType(mediaType);
+//        if (!TextUtils.isEmpty(mScreencode)) {
+//            lelinkPlayerInfo.setOption(IAPI.OPTION_6, mScreencode);
+//        }
+        lelinkPlayerInfo.setLelinkServiceInfo(mSelectInfo);
+        LelinkSourceSDK.getInstance().startPlayMedia(lelinkPlayerInfo);
+    }
+
+//    private void play(int mediaType, String url) {
+//        isPlayMirror = false;
+//        if (null == mLelinkHelper) {
+//            ToastUtil.show(context, "未初始化或未选择设备");
+//            return;
+//        }
+//        List<LelinkServiceInfo> connectInfos = mLelinkHelper.getConnectInfos();
+//        Logger.e(TAG, "connect click:" + connectInfos.toString());
+//        if (null == connectInfos || connectInfos.isEmpty()) {
+//            ToastUtil.show(context, "请先连接设备");
+//            return;
+//        }
+////        if (isPause) {
+////            Logger.test(TAG, "resume click");
+////            isPause = false;
+////            // 暂停中
+////            mLelinkHelper.resume();
+////            return;
+////        } else {
+////            Logger.test(TAG, "play click");
+////        }
+////        int checkedId = mRadioGroup.getCheckedRadioButtonId();
+////        int mediaType = 0;
+//        String mediaTypeStr = null;
+//        boolean isLocalFile = false;
+////        String url = null;
+//        switch (mediaType) {
 //            case AllCast.MEDIA_TYPE_VIDEO:
-//                mediaType = AllCast.MEDIA_TYPE_VIDEO;
-//                isLocalFile = true;
-////                url = mEtLocalVideo.getText().toString();
-//                mediaTypeStr = "LocalVideo";
+////                url = mEtNetVideo.getText().toString();
+//                mediaTypeStr = "NetVideo";
 //                break;
 //            case AllCast.MEDIA_TYPE_AUDIO:
-//                mediaType = AllCast.MEDIA_TYPE_AUDIO;
-//                isLocalFile = true;
-////                url = mEtLocalMusic.getText().toString();
-//                mediaTypeStr = "LocalMusic";
+////                url = mEtNetMusic.getText().toString();
+//                mediaTypeStr = "NetMusic";
 //                break;
 //            case AllCast.MEDIA_TYPE_IMAGE:
 //                mediaType = AllCast.MEDIA_TYPE_IMAGE;
-//                isLocalFile = true;
-////                url = mEtLocalPicture.getText().toString();
-//                mediaTypeStr = "LocalPicture";
+////                url = mEtNetPicture.getText().toString();
+//                mediaTypeStr = "NetPicture";
 //                break;
-        }
-        Logger.test(TAG, "start play url:" + url + " type:" + mediaTypeStr);
-        if (isLocalFile) {
-            // 本地media
-            mLelinkHelper.playLocalMedia(url, mediaType, "");
-        } else {
-            // 网络media
-            mLelinkHelper.playNetMedia(url, mediaType, "");
-        }
+////            case AllCast.MEDIA_TYPE_VIDEO:
+////                mediaType = AllCast.MEDIA_TYPE_VIDEO;
+////                isLocalFile = true;
+//////                url = mEtLocalVideo.getText().toString();
+////                mediaTypeStr = "LocalVideo";
+////                break;
+////            case AllCast.MEDIA_TYPE_AUDIO:
+////                mediaType = AllCast.MEDIA_TYPE_AUDIO;
+////                isLocalFile = true;
+//////                url = mEtLocalMusic.getText().toString();
+////                mediaTypeStr = "LocalMusic";
+////                break;
+////            case AllCast.MEDIA_TYPE_IMAGE:
+////                mediaType = AllCast.MEDIA_TYPE_IMAGE;
+////                isLocalFile = true;
+//////                url = mEtLocalPicture.getText().toString();
+////                mediaTypeStr = "LocalPicture";
+////                break;
+//        }
+//        Logger.test(TAG, "start play url:" + url + " type:" + mediaTypeStr);
+//        if (isLocalFile) {
+//            // 本地media
+//            mLelinkHelper.playLocalMedia(url, mediaType, "");
+//        } else {
+//            // 网络media
+//            mLelinkHelper.playNetMedia(url, mediaType, "");
+//        }
+//
+//    }
 
-    }
-
-    private void pause() {
-        List<LelinkServiceInfo> connectInfos = null;
-        if (null != mLelinkHelper) {
-            connectInfos = mLelinkHelper.getConnectInfos();
-        }
-        if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
-            Logger.test(TAG, "pause click");
-            mLelinkHelper.pause();
-        }
-    }
-
-    private void resume() {
-        mLelinkHelper.resume();
-    }
-
-    private void stop() {
-        List<LelinkServiceInfo> connectInfos = null;
-        if (null != mLelinkHelper) {
-            connectInfos = mLelinkHelper.getConnectInfos();
-        }
-        if (null != mLelinkHelper && null != connectInfos && !connectInfos.isEmpty()) {
-//            Logger.test(TAG, "stop click");
-            mLelinkHelper.stop();
-        } else {
-//            ToastUtil.show(mContext, "请先连接设备");
-        }
-    }
-
-    private void updateBrowseAdapter() {
-        if (null != mLelinkHelper) {
-            List<LelinkServiceInfo> infos = mLelinkHelper.getInfos();
+    //设备搜索结果
+    private void updateBrowseAdapter(List<LelinkServiceInfo> infos) {
+        if (!infos.isEmpty()) {
             HashMap map = new HashMap<String, LelinkServiceInfo>();
             for (int i = 0; i < infos.size(); i++) {
                 map.put(infos.get(i).getIp(), infos.get(i));
@@ -633,12 +881,15 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
                 HashMap map1 = new HashMap<String, String>();
                 Gson gson = new Gson();
                 map1.put("data", gson.toJson(infos));
-                map1.put("ack", STATE_SEARCH_RESULT);
+                map1.put("ack", MSG_SEARCH_RESULT);
                 String toJson = gson.toJson(map1);
                 eventSink.success(toJson);
             } else {
                 Log.e(TAG, "error :eventSink not init");
             }
+        } else {
+            //搜索数据为空
+            ackSuccess(MSG_SEARCH_EMPTY);
         }
     }
 
@@ -649,7 +900,7 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
 
     private static String TAG = "FlutterpluginhpplayPlugin";
     HashMap<String, LelinkServiceInfo> mDevicesMap = new HashMap<String, LelinkServiceInfo>();
-    LelinkServiceInfo info;
+    private LelinkServiceInfo mSelectInfo;
     //事件派发
     private EventChannel.EventSink eventSink = null;
     private EventChannel.StreamHandler streamHandler = new EventChannel.StreamHandler() {
@@ -670,11 +921,6 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
     private boolean isPlayMirror;
     private FlutterpluginhpplayPlugin.UIHandler mDelayHandler;
 
-
-    ///这个handler 负责回馈状态到flutter
-    // 只有搜索状态只有改变时 才通知flutter 状态改变
-    // 搜索只要有结果    就通知flutter 更新列表
-    // 只有搜索完成到开始搜索 才进行搜索
     private class UIHandler extends Handler {
 
         private WeakReference<Activity> mReference;
@@ -683,63 +929,128 @@ public class FlutterpluginhpplayPlugin implements FlutterPlugin, MethodCallHandl
             mReference = new WeakReference<>(reference);
         }
 
-
         @Override
         public void handleMessage(Message msg) {
-            boolean b = false;
-            if (msg.what == IUIUpdateListener.STATE_SEARCH_SUCCESS || msg.what == IUIUpdateListener.STATE_SEARCH_ING) {
-                b = changeSearchType(msg.what);
-            } else {
-                changeConnectType(msg.what);
-            }
-
             Activity mainActivity = mReference.get();
             if (mainActivity == null) {
                 return;
             }
             switch (msg.what) {
-                case IUIUpdateListener.STATE_SEARCH_SUCCESS:
-                    updateBrowseAdapter();//更新列表
+                case MSG_SEARCH_FAILED://搜索失败
+                    ackSuccess(MSG_SEARCH_FAILED);
                     break;
-                case IUIUpdateListener.STATE_SEARCH_ING:
-                    if (b) browse();
+                case MSG_SEARCH_RESULT://搜索成功
+                    updateBrowseAdapter((List<LelinkServiceInfo>) msg.obj);//更新列表
                     break;
-                case IUIUpdateListener.STATE_SEARCH_NO_RESULT: {
-                    Map map = new HashMap();
-                    map.put("ack", IUIUpdateListener.STATE_SEARCH_NO_RESULT);
-                    Gson gson = new Gson();
-                    String toJson = gson.toJson(map);
-                    eventSink.success(toJson);
+                case MSG_CONNECT_SUCCESS://连接成功
+                    deviceInfo = msg.obj;
+                    showConnetDevice();
                     break;
-                }
+                case MSG_CONNECT_FAILURE:
+                    deviceInfo = null;
+                    ackSuccess(MSG_CONNECT_FAILURE, msg.obj);
+                    String text = (String) msg.obj;
+                    if (!TextUtils.isEmpty(text))
+                        Toast.makeText(context.getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                    break;
+                case MSG_UPDATE_PROGRESS:
+                    int duration = msg.arg1;
+                    int position = msg.arg2;
+                    int[] arr = {duration, position};
+                    Logger.d(TAG, "ToastUtil 总长度：" + msg.arg1 + " 当前进度:" + msg.arg2);
+                    ackSuccess(MSG_UPDATE_PROGRESS, arr);
+                    break;
+                case MSG_PLAY_STATE_START:
+                case MSG_PLAY_STATE_PAUSE:
+                case MSG_PLAY_STATE_COMPLETION:
+                case MSG_PLAY_STATE_STOP:
+                case MSG_PLAY_STATE_ERROR:
+                case MSG_PLAY_STATE_SEEKCOMPLETE:
+                case MSG_PLAY_STATE_LOADING:
 
-                case IUIUpdateListener.STATE_CONNECT_SUCCESS: {
-                    Map map = new HashMap();
-                    map.put("ack", IUIUpdateListener.STATE_CONNECT_SUCCESS);
-                    map.put("data", msg.obj);
-                    Gson gson = new Gson();
-                    String toJson = gson.toJson(map);
-                    eventSink.success(toJson);
-                    break;
-                }
+                    ackSuccess(msg.what);
 
-                case IUIUpdateListener.STATE_DISCONNECT:
-                    Map map = new HashMap();
-                    map.put("ack", IUIUpdateListener.STATE_CONNECT_SUCCESS);
-//                    map.put("data", msg.obj);
-                    Gson gson = new Gson();
-                    String toJson = gson.toJson(map);
-                    eventSink.success(toJson);
                     break;
             }
-
             super.handleMessage(msg);
         }
+
+    }
+//    ///这个handler 负责回馈状态到flutter
+//    // 只有搜索状态只有改变时 才通知flutter 状态改变
+//    // 搜索只要有结果    就通知flutter 更新列表
+//    // 只有搜索完成到开始搜索 才进行搜索
+//    private class UIHandler extends Handler {
+//
+//        private WeakReference<Activity> mReference;
+//
+//        UIHandler(Activity reference) {
+//            mReference = new WeakReference<>(reference);
+//        }
+//
+//
+//        @Override
+//        public void handleMessage(Message msg) {
+//            boolean b = false;
+//            if (msg.what == IUIUpdateListener.STATE_SEARCH_SUCCESS || msg.what == IUIUpdateListener.STATE_SEARCH_ING) {
+//                b = changeSearchType(msg.what);
+//            } else {
+//                changeConnectType(msg.what);
+//            }
+//
+//            Activity mainActivity = mReference.get();
+//            if (mainActivity == null) {
+//                return;
+//            }
+//            switch (msg.what) {
+//                case IUIUpdateListener.STATE_SEARCH_SUCCESS:
+//                    updateBrowseAdapter();//更新列表
+//                    break;
+////                case IUIUpdateListener.STATE_SEARCH_ING:
+////                    if (b) browse();
+////                    break;
+//                case IUIUpdateListener.STATE_SEARCH_NO_RESULT: {
+//                    ackSuccess(IUIUpdateListener.STATE_SEARCH_NO_RESULT);
+//                    break;
+//                }
+//
+//                case IUIUpdateListener.STATE_CONNECT_SUCCESS: {
+//                    mConnectType = IUIUpdateListener.STATE_CONNECT_SUCCESS;
+//                    deviceInfo = msg.obj;
+//                    ackSuccess(IUIUpdateListener.STATE_CONNECT_SUCCESS, deviceInfo);
+//                    break;
+//                }
+//
+//                case IUIUpdateListener.STATE_DISCONNECT:
+//                    deviceInfo = null;
+//                    mConnectType = IUIUpdateListener.STATE_DISCONNECT;
+//                    ackSuccess(IUIUpdateListener.STATE_DISCONNECT);
+//                    break;
+//            }
+//
+//            super.handleMessage(msg);
+//        }
+//    }
+
+    public int ackSuccess(int i) {
+        Map map = new HashMap();
+        map.put("ack", i);
+        Gson gson = new Gson();
+        String toJson = gson.toJson(map);
+        eventSink.success(toJson);
+        return mConnectType;
     }
 
+    public int ackSuccess(int i, Object data) {
+        Gson gson = new Gson();
+        Map map = new HashMap();
+        map.put("ack", i);
+        map.put("data", gson.toJson(data));
+        String toJson = gson.toJson(map);
+        eventSink.success(toJson);
+        return mConnectType;
+    }
 
-    // SDK
-    private LelinkHelper mLelinkHelper;
     private static final String WIFI_AP_STATE_CHANGED_ACTION = "android.net.wifi.WIFI_AP_STATE_CHANGED";
     private static final String NET_VIDEO_URL = "https://v.mifile.cn/b2c-mimall-media/ed921294fb62caf889d40502f5b38147.mp4";
     private static final String NET_MUSIC_URL = "http://music.163.com/song/media/outer/url?id=287248.mp3";
